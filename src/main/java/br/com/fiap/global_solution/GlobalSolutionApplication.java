@@ -2,6 +2,8 @@ package br.com.fiap.global_solution;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class GlobalSolutionApplication {
@@ -10,4 +12,8 @@ public class GlobalSolutionApplication {
 		SpringApplication.run(GlobalSolutionApplication.class, args);
 	}
 
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 }

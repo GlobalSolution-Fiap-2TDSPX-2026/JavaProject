@@ -1,8 +1,11 @@
 package br.com.fiap.global_solution.services;
 
 import br.com.fiap.global_solution.enums.RiskLevel;
+import br.com.fiap.global_solution.models.Asteroid;
 import br.com.fiap.global_solution.models.RiskAssessment;
+import br.com.fiap.global_solution.models.RiskZone;
 import br.com.fiap.global_solution.repositories.RiskAssessmentRepository;
+import br.com.fiap.global_solution.repositories.RiskZoneRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -18,9 +21,11 @@ import java.util.Optional;
 @Service
 public class RiskAssessmentService {
 
+    private final RiskZoneRepository riskZoneRepository;
     private final RiskAssessmentRepository riskAssessmentRepository;
-    public RiskAssessmentService(RiskAssessmentRepository repository) {
+    public RiskAssessmentService(RiskAssessmentRepository repository,  RiskZoneRepository riskZoneRepository) {
         this.riskAssessmentRepository = repository;
+        this.riskZoneRepository = riskZoneRepository;
     }
 
     public Optional<RiskAssessment> findById(Long id) {
@@ -65,5 +70,20 @@ public class RiskAssessmentService {
         if (optionalRiskAssessment.isEmpty()) {throw new ResponseStatusException(HttpStatus.NOT_FOUND, "RiskAssessment not found");}
         newRiskAssessment.setId(id);
         return riskAssessmentRepository.save(newRiskAssessment);
+    }
+
+    public void AssessmentImpactRisk(Asteroid asteroid, Double distanceKm){
+
+        if (asteroid.getIsPotentiallyDangerous() == true && distanceKm <= 7500000.0) {
+            List<RiskZone> zones = riskZoneRepository.findAll();
+            for (RiskZone zone : zones) {
+                RiskAssessment alert = new RiskAssessment();
+                alert.setAsteroid(asteroid);
+                alert.setRiskLevel(RiskLevel.HIGH);
+                alert.setAssessedAt(LocalDateTime.now());
+
+                riskAssessmentRepository.save(alert);
+            }
+        }
     }
 }
