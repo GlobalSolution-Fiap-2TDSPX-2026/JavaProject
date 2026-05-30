@@ -16,16 +16,18 @@ public class NasaSyncService {
 
     private final RestTemplate restTemplate;
     private final AsteroidRepository asteroidRepository;
+    private final RiskAssessmentService riskAssessmentService;
 
     @Value("${nasa.api.key}")
     private String apiKey;
 
-    public NasaSyncService(RestTemplate restTemplate, AsteroidRepository asteroidRepository) {
+    public NasaSyncService(RestTemplate restTemplate, AsteroidRepository asteroidRepository,  RiskAssessmentService riskAssessmentService) {
         this.restTemplate = restTemplate;
         this.asteroidRepository = asteroidRepository;
+        this.riskAssessmentService = riskAssessmentService;
     }
 
-    public void sincronizarAsteroidesDeHoje() {
+    public void syncAsteroidsFromToday() {
         String hoje = LocalDate.now().toString();
         String url = "https://api.nasa.gov/neo/rest/v1/feed?start_date=" + hoje + "&end_date=" + hoje + "&api_key=" + apiKey;
 
@@ -37,18 +39,20 @@ public class NasaSyncService {
             if (asteroidesDeHoje != null) {
                 for (NasaAsteroid nasaDto : asteroidesDeHoje) {
 
-                    // Transforma o DTO da NASA na tua Entidade
                     Asteroid asteroid = new Asteroid();
                     asteroid.setNasaId(nasaDto.id());
                     asteroid.setName(nasaDto.name());
                     asteroid.setIsPotentiallyDangerous(nasaDto.isPotentiallyHazardousAsteroid());
 
-                    // Guarda no teu banco de dados
                     asteroidRepository.save(asteroid);
 
                     if (nasaDto.closeApproachData() != null && !nasaDto.closeApproachData().isEmpty()) {
 
-                        String kmString = nasaDto.closeApproachData().get(0).missDistance().toString();
+                        String kmString = nasaDto.closeApproachData().get(0).missDistance().get("kilometers");
+                        Double km = Double.parseDouble(kmString);
+
+                        riskAssessmentService.assessmentImpactRisk(asteroid, km);
+
                     }
 
                 }

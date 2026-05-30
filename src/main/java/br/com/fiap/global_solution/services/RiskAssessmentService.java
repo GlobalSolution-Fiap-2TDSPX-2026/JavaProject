@@ -72,7 +72,7 @@ public class RiskAssessmentService {
         return riskAssessmentRepository.save(newRiskAssessment);
     }
 
-    public void AssessmentImpactRisk(Asteroid asteroid, Double distanceKm){
+    public void assessmentImpactRisk(Asteroid asteroid, Double distanceKm){
 
         if (asteroid.getIsPotentiallyDangerous() == true && distanceKm <= 7500000.0) {
             List<RiskZone> zones = riskZoneRepository.findAll();
